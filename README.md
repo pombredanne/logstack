@@ -1,4 +1,4 @@
-stacklog: Augments your stacktraces and logging by adding context
+logstack: Augments your stacktraces and logging by adding context
 
 # Introduction
 
