@@ -2,6 +2,7 @@ import contextlib
 import linecache
 import logging
 import sys
+import threading
 import traceback
 try:
     import cStringIO as StringIO
@@ -63,7 +64,12 @@ def set_context_class(cls):
     _context_class = cls
 
 
-pushed_infos = StackMap()
+localstorage = threading.local()
+
+def infos():
+    if not hasattr(localstorage, 'pushed_infos'):
+        localstorage.pushed_infos = StackMap()
+    return localstorage.pushed_infos
 
 
 class ExceptionFormatterMixin(object):
@@ -81,7 +87,7 @@ class ExceptionFormatterMixin(object):
             name = co.co_name
             item = '  File "%s", line %d, in %s' % (filename, lineno, name)
 
-            frame_contexts = pushed_infos.get(f)
+            frame_contexts = infos().get(f)
             if frame_contexts:
                 for ctx in frame_contexts:
                     item += '\n  %s' % ctx
@@ -108,7 +114,7 @@ def push(*args, **kwargs):
     You don't have to pop this, it is associated with the caller's stack frame.
     """
     f = currentframe().f_back
-    pushed_infos.set(f, _context_class(*args, **kwargs))
+    infos().set(f, _context_class(*args, **kwargs))
 
 
 @contextlib.contextmanager
@@ -119,8 +125,9 @@ def pushed(*args, **kwargs):
     """
     ctx = _context_class(*args, **kwargs)
     f = currentframe().f_back
-    pushed_infos.set(f, ctx)
+    i = infos()
+    i.set(f, ctx)
     try:
         yield
     finally:
-        pushed_infos.remove(f, ctx)
+        i.remove(f, ctx)
