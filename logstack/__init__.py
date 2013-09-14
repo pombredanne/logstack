@@ -17,7 +17,7 @@ def currentframe():
         raise Exception
     except:
         return sys.exc_info()[2].tb_frame.f_back
-if hasattr(sys, '_getframe'): currentframe = lambda: sys._getframe(3)
+if hasattr(sys, '_getframe'): currentframe = lambda: sys._getframe(1)
 
 
 class StackDictionary(PurgingDictionary):
