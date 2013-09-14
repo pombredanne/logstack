@@ -8,7 +8,7 @@ try:
 except ImportError:
     import StringIO
 
-from .purging_dict import PurgingDictionary
+from .purging_map import PurgingMap
 
 
 # Gets the current frame (from logging)
@@ -20,13 +20,15 @@ def currentframe():
 if hasattr(sys, '_getframe'): currentframe = lambda: sys._getframe(1)
 
 
-class StackDictionary(PurgingDictionary):
-    def _mark_seen(self, frame):
-        while frame is not None:
-            if frame in self._seen_keys:
-                break
-            self._seen_keys.add(frame)
-            frame = frame.f_back
+class StackMap(PurgingMap):
+    def set(self, key, value):
+        frames = set()
+        f = key
+        while f is not None:
+            frames.add(f)
+            f = f.f_back
+        self.filter(frames)
+        super(StackMap, self).set(key, value)
 
 
 class DefaultContext(object):
@@ -61,7 +63,7 @@ def set_context_class(cls):
     _context_class = cls
 
 
-pushed_infos = StackDictionary()
+pushed_infos = StackMap()
 
 
 class ExceptionFormatterMixin(object):
@@ -106,8 +108,7 @@ def push(*args, **kwargs):
     You don't have to pop this, it is associated with the caller's stack frame.
     """
     f = currentframe().f_back
-    frame_contexts = pushed_infos.setdefault(f, [])
-    frame_contexts.append(_context_class(*args, **kwargs))
+    pushed_infos.set(f, _context_class(*args, **kwargs))
 
 
 @contextlib.contextmanager
@@ -116,11 +117,10 @@ def pushed(*args, **kwargs):
 
     The context is removed when leaving the context manager.
     """
-    frame_contexts = pushed_infos.setdefault(currentframe().f_back, [])
     ctx = _context_class(*args, **kwargs)
-    idx = len(frame_contexts)
-    frame_contexts.append(ctx)
+    f = currentframe().f_back
+    pushed_infos.set(f, ctx)
     try:
         yield
     finally:
-        del frame_contexts[idx]
+        pushed_infos.remove(f, ctx)
