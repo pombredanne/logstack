@@ -20,6 +20,15 @@ def currentframe():
 if hasattr(sys, '_getframe'): currentframe = lambda: sys._getframe(3)
 
 
+class StackDictionary(PurgingDictionary):
+    def _mark_seen(self, frame):
+        while frame is not None:
+            if frame in self._seen_keys:
+                break
+            self._seen_keys.add(frame)
+            frame = frame.f_back
+
+
 class DefaultContext(object):
     """Default context formatter.
     """
@@ -52,7 +61,7 @@ def set_context_class(cls):
     _context_class = cls
 
 
-pushed_infos = PurgingDictionary()
+pushed_infos = StackDictionary()
 
 
 class ExceptionFormatterMixin(object):
