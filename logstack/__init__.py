@@ -34,6 +34,17 @@ class StackMap(PurgingMap):
 
 class DefaultContext(object):
     """Default context formatter.
+
+    It takes an optional message and any number of parameters, passed as
+    keyword arguments.
+
+    For example, using::
+
+        logstack.push("Opening a file", filename="foo.txt", mode="r")
+
+    will display::
+
+        Opening a file (filename="foo.txt", mode="r")
     """
     def __init__(self, msg=None, **kwargs):
         self.msg = msg
@@ -59,6 +70,9 @@ def set_context_class(cls):
 
     This class gets passed the arguments that were given to push() or pushed(),
     and is converted to a string to be put in the traceback.
+
+    The default is :class:`~DefaultContext` which takes a message and keyword
+    parameters.
     """
     global _context_class
     _context_class = cls

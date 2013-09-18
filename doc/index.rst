@@ -1,22 +1,29 @@
-.. logstack documentation master file, created by
-   sphinx-quickstart on Tue Sep 17 20:02:55 2013.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
+logstack: a context stack to complement your logging
+====================================================
 
-Welcome to logstack's documentation!
-====================================
+Getting started
+---------------
 
-Contents:
+TODO
+
+Contents
+--------
 
 .. toctree::
    :maxdepth: 2
 
+   reference
+   internals
+   changelog
 
+Links
+-----
+
+logging and structlog
 
 Indices and tables
-==================
+------------------
 
 * :ref:`genindex`
 * :ref:`modindex`
 * :ref:`search`
-
