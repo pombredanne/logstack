@@ -10,15 +10,28 @@ class PurgingMap(object):
         self._dict = {}
 
     def set(self, key, value):
+        """Adds a new value for the key. This does not replace previous values.
+        """
         self._dict.setdefault(key, []).append(value)
 
     def get(self, key):
+        """Returns the list of values for that key.
+        """
         return self._dict.get(key, [])
 
     def remove(self, key, value):
+        """Removes a specific (key, value) pair.
+
+        Raises KeyError if there is no value for that key, ValueError if value
+        is not one of them.
+        """
         self._dict[key].remove(value)
 
     def filter(self, keys):
+        """Only keeps specific keys in the map.
+
+        Every key that is not in the iterable keys will be purged.
+        """
         if not isinstance(keys, set):
             keys = set(keys)
         for k in self._dict.keys():
