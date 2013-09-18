@@ -120,6 +120,8 @@ class ExceptionFormatterMixin(object):
 class Formatter(ExceptionFormatterMixin, logging.Formatter):
     """Version of logging.Formatter with the custom traceback.
     """
+    def __init__(self, *args, **kwargs):
+        logging.Formatter.__init__(self, *args, **kwargs)
 
 
 def push(*args, **kwargs):

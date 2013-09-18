@@ -1,6 +1,9 @@
 import os
 import sys
-import unittest
+try:
+    import unittest2 as unittest
+except ImportError:
+    import unittest
 
 
 top_level = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
