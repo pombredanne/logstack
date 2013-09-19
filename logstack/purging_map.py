@@ -34,6 +34,6 @@ class PurgingMap(object):
         """
         if not isinstance(keys, set):
             keys = set(keys)
-        for k in self._dict.keys():
+        for k in list(self._dict.keys()):
             if k not in keys:
                 del self._dict[k]

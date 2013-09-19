@@ -4,10 +4,6 @@ import logging
 import sys
 import threading
 import traceback
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
 
 from .purging_map import PurgingMap
 
@@ -53,7 +49,7 @@ class DefaultContext(object):
     def __str__(self):
         if self.kwargs:
             kw = ', '.join('%s=%r' % (k, v)
-                           for k, v in self.kwargs.iteritems())
+                           for k, v in self.kwargs.items())
             if self.msg:
                 return "%s (%s)" % (self.msg, kw)
             else:
@@ -113,7 +109,7 @@ class ExceptionFormatterMixin(object):
 
             formatted.append(item)
             tb = tb.tb_next
-        formatted.append("%s: %s" % (etype.__name__, value.message))
+        formatted.append("%s: %s" % (etype.__name__, value))
         return '\n'.join(formatted)
 
 
