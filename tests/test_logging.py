@@ -1,5 +1,7 @@
 from __future__ import with_statement
 
+import itertools
+import re
 try:
     import cStringIO as StringIO
 except ImportError:
@@ -40,24 +42,25 @@ class TestLogging(unittest.TestCase):
             foo()
         except:
             logging.critical("Got exception", exc_info=True)
-        self.assertEqual(
-                self.output.getvalue(),
-'WARNING\n'
-'warning here\n'
+        expected = (
+r'^WARNING$',
+r'^warning here$',
 
-'CRITICAL\n'
-'Got exception\n'
-'Traceback (most recent call last):\n'
-'  File "C:\\programmation\\logstack\\tests\\test_logging.py", line 38, in '
-        'test_logging\n'
-'    foo()\n'
-'  File "C:\\programmation\\logstack\\tests\\test_logging.py", line 25, in '
-        'foo\n'
-'  (in_foo=True)\n'
-'  (out_of_bar=True)\n'
-'    baz()\n'
-'  File "C:\\programmation\\logstack\\tests\\test_logging.py", line 20, in '
-        'baz\n'
-'  (in_baz=True)\n'
-'    raise ValueError("ohno")\n'
-'ValueError: ohno\n')
+r'^CRITICAL$',
+r'^Got exception$',
+r'^Traceback \(most recent call last\):$',
+r'^  File ".+test_logging\.py", line [0-9]+, in test_logging$',
+r'^    foo\(\)$',
+r'^  File ".+test_logging\.py", line [0-9]+, in foo$',
+r'^  \(in_foo=True\)$',
+r'^  \(out_of_bar=True\)$',
+r'^    baz\(\)$',
+r'^  File ".+test_logging\.py", line [0-9]+, in baz$',
+r'^  \(in_baz=True\)$',
+r'^    raise ValueError\("ohno"\)$',
+r'^ValueError: ohno$')
+        actual = self.output.getvalue().split('\n')
+        if actual and not actual[-1]:
+            actual = actual[:-1]
+        for a, e in itertools.izip_longest(actual, expected):
+            self.assertIsNotNone(re.search(e, a), "%r != %r" % (a, e))
