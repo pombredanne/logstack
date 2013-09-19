@@ -1,11 +1,8 @@
 from __future__ import with_statement
 
-import itertools
 import re
-try:
-    import cStringIO as StringIO
-except ImportError:
-    import StringIO
+from six import StringIO
+from six.moves import zip_longest
 try:
     import unittest2 as unittest
 except ImportError:
@@ -32,7 +29,7 @@ def foo():
 class TestLogging(unittest.TestCase):
     def setUp(self):
         self.logger = logging.getLogger()
-        self.output = StringIO.StringIO()
+        self.output = StringIO()
         console = logging.StreamHandler(self.output)
         console.setFormatter(logstack.Formatter("%(levelname)s\n%(message)s"))
         self.logger.addHandler(console)
@@ -62,5 +59,5 @@ r'^ValueError: ohno$')
         actual = self.output.getvalue().split('\n')
         if actual and not actual[-1]:
             actual = actual[:-1]
-        for a, e in itertools.izip_longest(actual, expected):
+        for a, e in zip_longest(actual, expected):
             self.assertIsNotNone(re.search(e, a), "%r != %r" % (a, e))
