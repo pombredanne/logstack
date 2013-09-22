@@ -1,5 +1,7 @@
 logstack: Augments your stacktraces and logging by adding context
 
+[![Build Status](https://travis-ci.org/remram44/logstack.png?branch=master)](https://travis-ci.org/remram44/logstack)
+
 # Introduction
 
 Python has the ability to display stacktraces when required (through the [traceback] module) or when exceptions occur. However, these only allow you to see the current path down the *code* that the execution took; what the application is doing, what it is doing it on, is always unclear.
