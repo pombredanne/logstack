@@ -85,32 +85,55 @@ def infos():
 class ExceptionFormatterMixin(object):
     """Logging formatter that inserts the context objects in the traceback.
     """
+    def format(self, record):
+        self.__record = record
+        return super(ExceptionFormatterMixin, self).format(record)
+
     def formatException(self, ei):
+        try:
+            fmt = self.__record.logstack
+        except AttributeError:
+            fmt = None # default is 'full'
+        if fmt == 'stack':
+            stack = True
+            contexts = False
+        elif fmt == 'contexts':
+            stack = False
+            contexts = True
+        else:
+            stack = True
+            contexts = True
+
         etype, value, tb = ei[:3]
         formatted = []
-        formatted.append("Traceback (most recent call last):")
+        formatted.append("Traceback (most recent call last):\n")
         while tb is not None:
             f = tb.tb_frame
             lineno = tb.tb_lineno
             co = f.f_code
             filename = co.co_filename
             name = co.co_name
-            item = '  File "%s", line %d, in %s' % (filename, lineno, name)
+            item = ''
+            if stack:
+                item += '  File "%s", line %d, in %s\n' % (
+                        filename, lineno, name)
 
-            frame_contexts = infos().get(f)
-            if frame_contexts:
-                for ctx in frame_contexts:
-                    item += '\n  %s' % ctx
+            if contexts:
+                frame_contexts = infos().get(f)
+                if frame_contexts:
+                    for ctx in frame_contexts:
+                        item += '  %s\n' % ctx
 
-            linecache.checkcache(filename)
-            line = linecache.getline(filename, lineno, f.f_globals)
-            if line:
-                item += '\n    ' + line.strip()
+            if stack:
+                linecache.checkcache(filename)
+                line = linecache.getline(filename, lineno, f.f_globals)
+                if line:
+                    item += '    %s\n' % line.strip()
 
             formatted.append(item)
             tb = tb.tb_next
         formatted.append("%s: %s" % (etype.__name__, value))
-        return '\n'.join(formatted)
+        return ''.join(formatted)
 
 
 class Formatter(ExceptionFormatterMixin, logging.Formatter):

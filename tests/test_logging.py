@@ -60,4 +60,9 @@ r'^ValueError: ohno$')
         if actual and not actual[-1]:
             actual = actual[:-1]
         for a, e in zip_longest(actual, expected):
-            self.assertIsNotNone(re.search(e, a), "%r != %r" % (a, e))
+            if e is None:
+                self.fail("Unexpected line %r" % e)
+            elif a is None:
+                self.fail("Missing line: expected %r" % a)
+            else:
+                self.assertIsNotNone(re.search(e, a), "%r != %r" % (a, e))
