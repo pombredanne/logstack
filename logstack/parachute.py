@@ -5,6 +5,7 @@ import runpy
 import subprocess
 import sys
 import tempfile
+import shutil
 
 
 # POSIX signal numbers
@@ -83,9 +84,10 @@ def execute(args):
         if (retcode >> 32) & 0xFFFFFFFF == 0xFFFFFFFF:
             excnum = retcode & 0xFFFFFFFF
             try:
-                return EXCS[excnum], None
+                exc = EXCS[excnum]
             except KeyError:
-                return "Exception %d" % excnum, None
+                exc = "<exception %d>" % excnum
+            return "Exception: %s" % exc, None
         else:
             return None, retcode & 0xFFFFFFFF
     else:
@@ -97,9 +99,10 @@ def execute(args):
         code = (status >> 8) & 0xFF
         if signum != 0:
             try:
-                return SIGNALS[signum], None
+                signal = SIGNALS[signum]
             except KeyError:
-                return "Signal %d" % signum, None
+                signal = "<signal %d>" % signum
+            return "Signal: %s" % signal, None
         else:
             return None, code
 
@@ -109,9 +112,6 @@ def sub_main(args, crashlog):
     """
     # Restores the arguments passed to the wrapper
     sys.argv = args
-    if not os.path.exists(args[0]):
-        sys.stderr.write("Error: %s does not exist\n" % args[0])
-        sys.exit(1)
     logstack.enable_parachute(crashlog)
     runpy.run_path(args[0])
 
@@ -120,8 +120,7 @@ def main():
     """Entry point for the wrapper process (started by the user).
     """
     # Create a temporary log file
-    handle, crashlog = tempfile.mkstemp(prefix='logstack_crashlog_')
-    os.close(handle)
+    crashlog = tempfile.mkdtemp(prefix='logstack_crashlog_')
 
     # Execute sub_main in a subprocess
     status, code = execute([
@@ -130,6 +129,16 @@ def main():
             'from logstack.parachute import sub_main; sub_main(%r, %r)' % (
                     sys.argv[1:], crashlog)])
 
-    # Check return code and read back log file
-    # TODO
-    os.remove(crashlog)
+    if status is None:
+        sys.stderr.write("Program exited normally, return code is %d\n" % code)
+    else:
+        sys.stderr.write("\n----- logstack parachute deployed -----\n")
+        sys.stderr.write("Program exited abnormally!\n")
+        sys.stderr.write(status)
+        sys.stderr.write("\n\nContext:\n  TODO\n") # TODO
+        print crashlog
+        raw_input()
+        code = 255
+
+    shutil.rmtree(crashlog)
+    sys.exit(code)

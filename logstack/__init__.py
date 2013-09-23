@@ -1,10 +1,43 @@
 import linecache
 import logging
+import os
 import sys
 import threading
 import traceback
 
-from .purging_map import PurgingMap
+from .purging_map import PurgingMap, SynchronizedPurgingMap
+
+
+def enable_parachute(crashlog):
+    global StackMap
+
+    def _tracing_func(frame, event, *args):
+        if event == 'return':
+            frames = set()
+            f = frame.f_back
+            while f is not None:
+                frames.add(f)
+                f = f.f_back
+            infos().filter(frames)
+
+    class StackMap(SynchronizedPurgingMap):
+        threadnum = 0
+        threadnum_mutex = threading.Lock()
+
+        def __init__(self):
+            with self.threadnum_mutex:
+                num = StackMap.threadnum
+                StackMap.threadnum += 1
+            SynchronizedPurgingMap.__init__(
+                    self,
+                    os.path.join(crashlog, 'thread_%d.log' % num))
+
+        def set(self, key, value):
+            if sys.getprofile() != _tracing_func:
+                sys.setprofile(_tracing_func)
+            super(StackMap, self).set(key, value)
+
+    sys.setprofile(_tracing_func)
 
 
 # Gets the current frame (from logging)

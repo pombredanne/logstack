@@ -1,3 +1,4 @@
+import pickle
 class PurgingMap(object):
     """Special mapping that only keeps some keys.
 
@@ -37,3 +38,35 @@ class PurgingMap(object):
         for k in list(self._dict.keys()):
             if k not in keys:
                 del self._dict[k]
+
+
+class SynchronizedPurgingMap(PurgingMap):
+    """Version of PurgingMap that serializes itself to a file.
+    """
+    def __init__(self, filename):
+        self._filename = filename
+        PurgingMap.__init__(self)
+
+    def set(self, key, value):
+        super(SynchronizedPurgingMap, self).set(key, value)
+        self.serialize()
+
+    def remove(self, key, value):
+        super(SynchronizedPurgingMap, self).remove(key, value)
+        self.serialize()
+
+    def filter(self, keys):
+        super(SynchronizedPurgingMap, self).filter(keys)
+        self.serialize()
+
+    def serialize(self):
+        # TODO : frame-specific code breaks abstraction
+        pick = {}
+        with open(self._filename, 'wb') as fp:
+            for frame, values in self._dict.iteritems():
+                if frame.f_back:
+                    b = id(frame.f_back)
+                else:
+                    b = None
+                pick[id(frame)] = (b, frame.f_code.co_name, values)
+            pickle.dump(pick, fp)
