@@ -1,4 +1,7 @@
+import logstack
+import os
 import platform
+import runpy
 import subprocess
 import sys
 import tempfile
@@ -104,7 +107,13 @@ def execute(args):
 def sub_main(args, crashlog):
     """Entry point for the wrapped process (that runs user code).
     """
-    # TODO : set parachute mode and execute user's code
+    # Restores the arguments passed to the wrapper
+    sys.argv = args
+    if not os.path.exists(args[0]):
+        sys.stderr.write("Error: %s does not exist\n" % args[0])
+        sys.exit(1)
+    logstack.enable_parachute(crashlog)
+    runpy.run_path(args[0])
 
 
 def main():
@@ -115,7 +124,12 @@ def main():
     os.close(handle)
 
     # Execute sub_main in a subprocess
-    retcode = subprocess.call(sys.executabe, '-c', 'from logstack.parachute import sub_main; sub_main(%r, %r)' % (sys.argv, crashlog))
+    status, code = execute([
+            sys.executable,
+            '-c',
+            'from logstack.parachute import sub_main; sub_main(%r, %r)' % (
+                    sys.argv[1:], crashlog)])
 
     # Check return code and read back log file
     # TODO
+    os.remove(crashlog)
