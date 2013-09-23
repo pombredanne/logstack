@@ -1,4 +1,3 @@
-import contextlib
 import linecache
 import logging
 import sys
@@ -152,17 +151,17 @@ def push(*args, **kwargs):
     infos().set(f, _context_class(*args, **kwargs))
 
 
-@contextlib.contextmanager
-def pushed(*args, **kwargs):
+class pushed(object):
     """Push some context onto the stack.
 
     The context is removed when leaving the context manager.
     """
-    ctx = _context_class(*args, **kwargs)
-    f = currentframe().f_back
-    i = infos()
-    i.set(f, ctx)
-    try:
-        yield
-    finally:
-        i.remove(f, ctx)
+    def __init__(self, *args, **kwargs):
+        self.ctx = _context_class(*args, **kwargs)
+
+    def __enter__(self):
+        self.frame = currentframe().f_back
+        infos().set(self.frame, self.ctx)
+
+    def __exit__(self, exc_type, exc_val, exc_tb):
+        infos().remove(self.frame, self.ctx)
