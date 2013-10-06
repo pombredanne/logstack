@@ -21,7 +21,7 @@ this information can be inlined into your stacktrace, augmenting the raw line
 numbers/method names with parameter values and custom messages.
 """
 setup(name='logstack',
-      version='0.0',
+      version='0.1',
       packages=['logstack'],
       description='Augments your stacktraces and logging by adding context',
       author="Remi Rampin",
